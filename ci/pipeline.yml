@@ -1,4 +1,10 @@
 ---
+resource_types:
+- name: pull-request
+  type: docker-image
+  source:
+    repository: teliaoss/github-pr-resource
+
 resources:
 - name: concourse-commons
   type: git
@@ -10,6 +16,13 @@ resources:
     uri: https://github.com/aashutoshtaikar/sample.git
     branch: master
   webhook_token: "sample-git-source"
+- name: pull-request
+  type: pull-request
+  check_every: 24h
+  webhook_token: sample-git-pr
+  source:
+    repository: itsdalmo/test-repository
+    access_token: ((github-access-token))    
 - name: artifact-repo
   type: s3
   source:
@@ -37,9 +50,18 @@ jobs:
   - get: concourse-commons
   - task: publish-code
     file: concourse-commons/tasks/publish-code.yml
+    on_failure:
+      put: pull-request
+      params:
+        path: pull-request
+        status: failure
   - put: artifact-repo
     params:
       file: tar-app/app.tgz
+  - put: pull-request
+    params:
+      path: pull-request
+      status: success
 
 - name: deploy-app
   plan:
