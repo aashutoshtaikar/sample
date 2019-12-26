@@ -43,13 +43,9 @@ jobs:
       path: pull-request
       status: pending
   - get: source-code
-    trigger: true
   - get: concourse-commons
   - task: run-tests
     file: concourse-commons/tasks/run-tests.yml
-  - put: artifact-repo
-    params:
-      file: tar-app/app.tgz
   - put: pull-request
     params:
       path: pull-request
@@ -68,6 +64,9 @@ jobs:
       params:
         path: pull-request
         status: failure
+  - put: artifact-repo
+    params:
+      file: tar-app/app.tgz
 
 - name: deploy-app
   plan:
