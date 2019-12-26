@@ -1,0 +1,53 @@
+---
+resources:
+- name: concourse-commons
+  type: git
+  source:
+    uri: https://github.com/aashutoshtaikar/concourse-commons
+- name: source-code 
+  type: git
+  source:
+    uri: https://github.com/aashutoshtaikar/sample.git
+    branch: master
+  webhook_token: "sample-git-source"
+- name: artifact-repo
+  type: s3
+  source:
+    bucket: ash-concourse-bucket
+    region_name: us-east-2
+    access_key_id: ((key-id))
+    secret_access_key: ((access-key))
+    versioned_file: app.tgz
+
+jobs:
+- name: unit-test
+  plan:
+  - get: source-code
+    trigger: true
+  - get: concourse-commons
+  - task: run-tests
+    file: concourse-commons/tasks/run-tests.yml
+
+
+- name: package-app
+  plan:
+  - get: source-code
+    passed: [unit-test]
+    trigger: true
+  - get: concourse-commons
+  - task: publish-code
+    file: concourse-commons/tasks/publish-code.yml
+  - put: artifact-repo
+    params:
+      file: tar-app/app.tgz
+
+- name: deploy-app
+  plan:
+  - get: artifact-repo
+    passed: [package-app]
+    trigger: true
+  - get: concourse-commons
+  - task: unpack-code
+    file: concourse-commons/tasks/unpack-code.yml
+
+# fly -t tutorial sp -c pipeline.yml -p sample-pipeline  -l pipeline-settings.yml
