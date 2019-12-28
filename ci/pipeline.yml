@@ -7,6 +7,8 @@ resource_types:
 
 #########
 resources:
+#########
+
 - name: concourse-commons
   type: git
   source:
