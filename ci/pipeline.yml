@@ -5,6 +5,7 @@ resource_types:
   source:
     repository: teliaoss/github-pr-resource
 
+#########
 resources:
 - name: concourse-commons
   type: git
