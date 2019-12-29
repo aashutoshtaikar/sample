@@ -44,8 +44,10 @@ jobs:
       status: pending
   - get: source-code
   - get: concourse-commons
-  - task: run-tests
-    file: concourse-commons/tasks/run-tests.yml
+  - task: unit-test
+    params:
+      mvn_args: "clean test"
+    file: concourse-commons/tasks/mvn.yml
     on_failure:
       put: pull-request
       params:
