@@ -13,16 +13,16 @@ resources:
 - name: source-code 
   type: git
   source:
-    uri: https://github.com/aashutoshtaikar/sample.git
+    uri: https://github.com/aashutoshtaikar/sample
     branch: master
   webhook_token: "sample-git-source"
 - name: pull-request
   type: pull-request
-  check_every: 24h
+  check_every: 1m
   webhook_token: sample-git-pr
   source:
-    repository: https://github.com/aashutoshtaikar/sample.git
-    access_token: ((github-access-token))    
+    repository: aashutoshtaikar/sample
+    access_token: ((github-access-token))  
 - name: artifact-repo
   type: s3
   source:
@@ -33,7 +33,7 @@ resources:
     versioned_file: app.tgz
 
 jobs:
-- name: unit-test
+- name: validate-pr
   plan:
   - get: pull-request
     trigger: true
@@ -46,6 +46,11 @@ jobs:
   - get: concourse-commons
   - task: run-tests
     file: concourse-commons/tasks/run-tests.yml
+    on_failure:
+      put: pull-request
+      params:
+        path: pull-request
+        status: failure
   - put: pull-request
     params:
       path: pull-request
@@ -54,7 +59,7 @@ jobs:
 - name: package-app
   plan:
   - get: source-code
-    passed: [unit-test]
+    passed: [validate-pr]
     trigger: true
   - get: concourse-commons
   - task: publish-code
