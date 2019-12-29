@@ -69,11 +69,6 @@ jobs:
   - get: concourse-commons
   - task: publish-code
     file: concourse-commons/tasks/publish-code.yml
-    on_failure:
-      put: pull-request
-      params:
-        path: pull-request
-        status: failure
   - put: artifact-repo
     params:
       file: tar-app/app.tgz
